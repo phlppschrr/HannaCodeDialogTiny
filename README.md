@@ -162,7 +162,7 @@ $wire->addHookAfter('HannaCodeDialogTiny::getDropdownTags', function(HookEvent $
 Hook `ProcessHannaCodeDialog::buildForm` to add custom fields that aren't defined in the Hanna Code attributes, or to modify existing ones.
 
 ```php
-$wire->addHookAfter('ProcessHannaCodeDialog::buildForm', function(HookEvent $event) {
+$wire->addHookAfter('ProcessHannaCodeDialogTiny::buildForm', function(HookEvent $event) {
     $tagName = $event->arguments(0); // Name of the tag being edited
     $form = $event->return; // The InputfieldForm object
 
@@ -179,10 +179,10 @@ $wire->addHookAfter('ProcessHannaCodeDialog::buildForm', function(HookEvent $eve
 
 ### 3. Manipulate Options
 
-Hook `ProcessHannaCodeDialog::prepareOptions` to dynamically inject options into select fields via PHP.
+Hook `ProcessHannaCodeDialogTiny::prepareOptions` to dynamically inject options into select fields via PHP.
 
 ```php
-$wire->addHookAfter('ProcessHannaCodeDialog::prepareOptions', function(HookEvent $event) {
+$wire->addHookAfter('ProcessHannaCodeDialogTiny::prepareOptions', function(HookEvent $event) {
     $optionsString = $event->arguments(0);
     $attrName = $event->arguments(1);
     $tagName = $event->arguments(2);
@@ -206,7 +206,7 @@ This module is fully compatible with the original `HannaCodeDialog` for CKEditor
 However, if you have registered custom **Hooks** in your `ready.php`, you need to update the class names:
 
 *   `HannaCodeDialog::getDropdownTags` &rarr; `HannaCodeDialogTiny::getDropdownTags`
-*   `ProcessHannaCodeDialog::buildForm` (Unchanged, shares the same process module)
+*   `ProcessHannaCodeDialog::buildForm` &rarr; `ProcessHannaCodeDialogTiny::buildForm` (The process module has been renamed to avoid conflicts)
 
 ## Credits
 

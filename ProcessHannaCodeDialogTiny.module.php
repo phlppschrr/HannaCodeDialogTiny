@@ -3,12 +3,12 @@
 namespace ProcessWire;
 
 /**
- * ProcessHannaCodeDialog
+ * ProcessHannaCodeDialogTiny
  *
  * Renders the dialog form within the ProcessWire Admin environment
  * to insert or edit Hanna Code tags via TinyMCE.
  */
-class ProcessHannaCodeDialog extends Process
+class ProcessHannaCodeDialogTiny extends Process
 {
     /**
      * @return array
@@ -16,13 +16,13 @@ class ProcessHannaCodeDialog extends Process
     public static function getModuleInfo()
     {
         return [
-            'title' => 'Hanna Code Dialog Process',
+            'title' => 'Hanna Code Dialog Tiny Process',
             'summary' => 'Backend Process for HannaCodeDialogTiny',
             'version' => '0.9.1',
             'author' => 'Robin Sallis, BitPoet, interrobang',
             'permission' => 'page-edit',
             'page' => [
-                'name' => 'hanna-code-dialog',
+                'name' => 'hanna-code-dialog-tiny',
                 'parent' => 'setup',
                 'title' => 'Hanna Code Dialog',
                 'status' => 'hidden',
@@ -201,7 +201,7 @@ class ProcessHannaCodeDialog extends Process
         }
 
         // Case B: Create Standard Inputfield
-        return $this->createStandardInputfield($key, $meta, $typeRaw);
+        return $this->createStandardInputfield($key, $meta, $typeRaw, $editedPage);
     }
 
     /**
@@ -236,10 +236,11 @@ class ProcessHannaCodeDialog extends Process
      * @param  string  $key
      * @param  array  $meta
      * @param  string  $typeRaw
+     * @param  Page  $editedPage
      *
      * @return Inputfield
      */
-    private function createStandardInputfield($key, array $meta, $typeRaw)
+    private function createStandardInputfield($key, array $meta, $typeRaw, $editedPage)
     {
         $modules = $this->wire()->modules;
 

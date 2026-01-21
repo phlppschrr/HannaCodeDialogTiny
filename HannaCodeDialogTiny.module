@@ -23,7 +23,7 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
             'autoload' => 'template=admin',
             'singular' => true,
             'requires' => 'ProcessWire>=3.0.218, InputfieldTinyMCE, TextformatterHannaCode, PHP>=7.0',
-            'installs' => 'ProcessHannaCodeDialog',
+            'installs' => 'ProcessHannaCodeDialogTiny',
         ];
     }
 
@@ -75,8 +75,8 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
             return;
         }
 
-        $processPage = $this->wire()->pages->get('name=hanna-code-dialog, parent=setup, template=admin');
-        $dialogUrl = $processPage->id ? $processPage->url : $config->urls->admin.'setup/hanna-code-dialog/';
+        $processPage = $this->wire()->pages->get('name=hanna-code-dialog-tiny, parent=setup, template=admin');
+        $dialogUrl = $processPage->id ? $processPage->url : $config->urls->admin.'setup/hanna-code-dialog-tiny/';
         $dialogUrl .= (strpos($dialogUrl, '?') === false ? '?' : '&').'modal=1';
 
         $editedPage = $event->wire()->process instanceof ProcessProfile ? $event->wire()->user : $event->object->getPage();
