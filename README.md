@@ -167,7 +167,7 @@ $wire->addHookAfter('ProcessHannaCodeDialogTiny::buildForm', function(HookEvent 
     $editedPage = $event->arguments(1);        // The page being edited
     $currentAttributes = $event->arguments(2); // Attributes already present
     $defaultAttributes = $event->arguments(3); // Default attributes from Hanna Code
-    $inputfieldName = $event->arguments(4);    // Context inputfield name
+    $inputfieldName = $event->arguments(4);    // The name of the TinyMCE inputfield
     
     $form = $event->return; // The InputfieldForm object
 
@@ -190,10 +190,10 @@ If you hook after `ProcessHannaCodeDialogTiny::prepareOptions` then your hook sh
 
 ```php
 $wire->addHookAfter('ProcessHannaCodeDialogTiny::prepareOptions', function(HookEvent $event) {
-    $optionsString = $event->arguments(0);
-    $attrName = $event->arguments(1);
-    $tagName = $event->arguments(2);
-    $editedPage = $event->arguments(3); // The page context
+    $optionsString = $event->arguments(0); // The raw options string (e.g. "1:Active|0:Inactive")
+    $attrName = $event->arguments(1);      // The name of the attribute
+    $tagName = $event->arguments(2);       // The name of the Hanna tag
+    $editedPage = $event->arguments(3);    // The page being edited
 
     if($tagName === 'employee_list' && $attrName === 'employee') {
         // Generate options array dynamically
