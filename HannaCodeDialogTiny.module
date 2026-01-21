@@ -34,6 +34,7 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
             'requires' => 'ProcessWire>=3.0.218, InputfieldTinyMCE, TextformatterHannaCode, PHP>=7.0',
             'installs' => 'ProcessHannaCodeDialogTiny',
         ];
+
     }
 
     /**
