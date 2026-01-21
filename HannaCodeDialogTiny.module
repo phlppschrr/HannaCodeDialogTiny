@@ -37,62 +37,6 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
     }
 
     /**
-     * Get module configuration inputfields
-     *
-     * @param InputfieldWrapper $inputfields
-     * @return void
-     */
-    public function getModuleConfigInputfields(InputfieldWrapper $inputfields) {
-        $modules = $this->wire()->modules;
-
-        $f = $modules->InputfieldCheckbox;
-        $f->name = 'auto_add_toolbar';
-        $f->label = $this->_('Auto-manage Hanna Code Integration');
-        $f->description
-            = $this->_("When enabled, this module automatically manages the 'hannacode' toolbar button and plugin activation based on whether 'TextformatterHannaCode' is enabled for each TinyMCE field.");
-        $f->notes
-            = $this->_('When you add or remove the TextformatterHannaCode from a field, both the toolbar button and the external plugin will be automatically added or removed. This sync happens when saving a field or when saving this module configuration.');
-        $f->attr('checked', $this->auto_add_toolbar ? 'checked' : '');
-        $inputfields->add($f);
-
-        $f = $modules->InputfieldMarkup;
-        $f->label = $this->_('Manual Setup Instructions');
-        $f->value = '<p>'.$this->_('If you prefer to manage the integration manually for each field:').'</p>'.
-            '<ol>'.
-            '<li>'.$this->_('Go to <strong>Setup → Fields</strong> and edit your TinyMCE field').'</li>'.
-            '<li>'.$this->_('In the <strong>Details</strong> tab, add <code>TextformatterHannaCode</code> to <strong>Text Formatters</strong>').'</li>'.
-            '<li>'.$this->_('In the <strong>Input</strong> tab, scroll to <strong>Toolbar</strong> and add <code>hannacode</code>').'</li>'.
-            '<li>'.$this->_('Scroll to <strong>External plugins to enable</strong> and check <code>HannaCodeDialogTiny</code>').'</li>'.
-            '<li>'.$this->_('Save the field').'</li>'.
-            '</ol>';
-        $f->icon = 'info-circle';
-        $f->collapsed = Inputfield::collapsedYes;
-        $inputfields->add($f);
-
-        $f = $modules->InputfieldText;
-        $f->name = 'exclude_prefix';
-        $f->label = $this->_('Exclude prefix');
-        $f->description = $this->_('Tags starting with this prefix will be hidden.');
-        $f->value = $this->exclude_prefix ?: '_';
-        $inputfields->add($f);
-
-        $f = $modules->InputfieldAsmSelect;
-        $f->name = 'exclude_selection';
-        $f->label = $this->_('Exclude Hanna tags');
-        $f->description = $this->_('Select specific tags to hide.');
-
-        $hanna = $modules->get('TextformatterHannaCode');
-        if ($hanna) {
-            foreach ($hanna->hannaCodes()->getAll() as $hc) {
-                $f->addOption($hc->name);
-            }
-        }
-
-        $f->value = $this->exclude_selection;
-        $inputfields->add($f);
-    }
-
-    /**
      * Initialize module and register hooks
      *
      * @return void
@@ -331,67 +275,7 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
         $f = $this->wire()->modules->get('InputfieldMarkup');
         $f->name = 'hcd_info';
         $f->label = $this->_('Attributes cheatsheet for HannaCodeDialogTiny');
-        $f->value = <<<EOT
-<style>
-.hcd-cheatsheet .mono { font-family:monospace; font-size:14px; background:#f0f0f0; display:inline-block; padding:1px 5px; border-radius:3px; color:#d00; }
-.hcd-cheatsheet .mono-block { padding:5px 10px; margin:0 0 10px; display:block; background:#f9f9f9; border-left: 3px solid #ccc; }
-</style>
-<div class='hcd-cheatsheet'>
-    <p>Use a double underscore to define <span class='mono'>type</span>, <span class='mono'>options</span>, <span class='mono'>description</span> or <span class='mono'>notes</span> for an attribute.</p>
-    <p><strong>Example: attribute named 'vegetables'...</strong></p>
-
-    <h3>1. Inputfield Types</h3>
-    <p class='mono mono-block'>vegetables__type=asmselect</p>
-    <p><strong>Supported types:</strong></p>
-    <ul>
-        <li><span class='mono'>text</span> (Default), <span class='mono'>email</span>, <span class='mono'>url</span></li>
-        <li><span class='mono'>textarea</span> (Linebreaks get removed)</li>
-        <li><span class='mono'>integer</span> (HTML5 Number)</li>
-        <li><span class='mono'>checkbox</span> (Single toggle), <span class='mono'>toggle</span></li>
-        <li><span class='mono'>radios</span>, <span class='mono'>select</span>, <span class='mono'>selectmultiple</span></li>
-        <li><span class='mono'>checkboxes</span>, <span class='mono'>asmselect</span> (Sortable Multiple)</li>
-        <li><span class='mono'>pagelistselect</span>, <span class='mono'>pagelistselectmultiple</span></li>
-        <li><span class='mono'>date</span>, <span class='mono'>datetime</span></li>
-        <li><span class='mono'>icon</span> (InputfieldIcon)</li>
-        <li><span class='mono'>field</span> (Clone existing field, see below)</li>
-    </ul>
-
-    <h3>2. Clone Existing Field</h3>
-    <p>Clone the complete configuration of an existing ProcessWire field:</p>
-    <p class='mono mono-block'>
-        category=""<br>
-        category__type=field<br>
-        category__field=blog_category
-    </p>
-
-    <h3>3. Options (for Selects, Radios, etc)</h3>
-
-    <p><strong>A) Simple List:</strong></p>
-    <p class='mono mono-block'>vegetables__options=Spinach|Pumpkin|Celery</p>
-    <p>You can also use a comma <code>,</code> separator (legacy support).</p>
-
-    <p><strong>B) Key/Value pairs:</strong><br>
-    Use a colon <code>:</code> to separate saved value from displayed label.</p>
-    <p class='mono mono-block'>vegetables__options=spinach:Fresh Spinach|pumpkin:Tasty Pumpkin</p>
-
-    <p><strong>C) Dynamic Options (via Hanna Code):</strong><br>
-    You can use another Hanna tag to generate the options string.</p>
-    <p class='mono mono-block'>vegetables__options=[[_generate_vegetable_options]]</p>
-
-    <h3>4. Description & Notes</h3>
-    <p class='mono mono-block'>
-        vegetables__description=Select ingredients for your soup.<br>
-        vegetables__notes=Pumpkin tastes best in autumn.
-    </p>
-
-    <h3>5. Date/Time Inputs</h3>
-    <p>For <code>date</code> types, no time picker is shown.</p>
-    <p class='mono mono-block'>
-        birthday__type=date<br>
-        birthday__format="d.m.Y"
-    </p>
-</div>
-EOT;
+        $f->value = file_get_contents(__DIR__ . '/cheatsheet.html');
         $f->icon = 'question-circle';
         $f->collapsed = Inputfield::collapsedYes;
         $form->insertAfter($f, $hcAttr);
