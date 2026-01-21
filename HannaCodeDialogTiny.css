@@ -65,6 +65,7 @@ span.hannadialog .h-attrs:empty {
 .mce-offscreen-selection {
     opacity: 0 !important;
 }
+
 .mce-offscreen-selection .hannadialog {
     background: transparent !important;
     border: none !important;
