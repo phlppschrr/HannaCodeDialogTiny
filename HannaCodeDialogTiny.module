@@ -66,9 +66,7 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
 
     public function addPlugins(HookEvent $event) {
         $config = $this->wire()->config;
-        if ($config->ajax || $this->input->get('InputfieldFileAjax')) {
-            return;
-        }
+
 
         $pg = $event->object->getPage();
         if ( ! $this->hasTinyMCE($pg->template->fields, $pg)) {
