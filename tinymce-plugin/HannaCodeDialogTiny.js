@@ -4,7 +4,7 @@
  * - Handles Drag & Drop
  * - Opens Iframe Dialog
  */
-tinymce.PluginManager.add('hannadialog', function (editor, url) {
+tinymce.PluginManager.add('HannaCodeDialogTiny', function (editor, url) {
 
     var openTag = hcdt_config.open_tag;
     var closeTag = hcdt_config.close_tag;
@@ -101,10 +101,10 @@ tinymce.PluginManager.add('hannadialog', function (editor, url) {
             openDialog(value.tag, value.code);
         }
     });
-    // Register the Toolbar Button (formerly in hannadropdown.js)
+    // Register the Toolbar Button
     editor.ui.registry.addIcon('hcdtdd', '<img style="width:24px; height: 24px;" src="' + hcdt_config.dropdown_icon + '" />');
 
-    editor.ui.registry.addMenuButton('hannadropdown', {
+    editor.ui.registry.addMenuButton('hannacode', {
         text: hcdt_config.dropdown_title,
         icon: 'hcdtdd',
         fetch: function (callback) {

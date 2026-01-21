@@ -4,7 +4,7 @@
  * - Handles Drag & Drop
  * - Opens Iframe Dialog
  */
-tinymce.PluginManager.add('hannadialog', function (editor, url) {
+tinymce.PluginManager.add('HannaCodeDialogTiny', function (editor, url) {
 
     var openTag = hcdt_config.open_tag;
     var closeTag = hcdt_config.close_tag;

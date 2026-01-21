@@ -10,21 +10,23 @@ The main enhancement is that Hanna tags in a TinyMCE field are rendered as visua
 * **InputfieldTinyMCE** (Core)
 * **TextformatterHannaCode** module
 
-## Installation
+### 3. Configure TinyMCE
+To use the dialog, you need to enable the **HannaCodeDialogTiny** plugin in your TinyMCE field settings.
 
-1.  Install the module via the ProcessWire module manager or by copying files to `/site/modules/HannaCodeDialogTiny/`.
-2.  Go to **Setup > Fields** and edit your TinyMCE field.
-3.  In the **Input** tab, scroll to **External plugins to enable** and check both:
-    - `hannadialog`
-    - `hannadropdown`
-4.  Add `hannadropdown` to your **Toolbar settings** to show the "Insert Hanna tag" dropdown button in the editor toolbar.
+1.  Go to **Setup > Fields** and edit your TinyMCE field (e.g., `body`).
+2.  In the **Input** tab, scroll to **External plugins to enable**.
+3.  Check:
+    - `HannaCodeDialogTiny`
+4.  Add `hannacode` to your **Toolbar** settings to show the "Insert Hanna tag" dropdown button.
 
-## Configuration
-
-Visit the module configuration screen (**Modules > Configure > HannaCodeDialogTiny**) to set:
-
-* **Exclude prefix:** Tags starting with this prefix will be hidden from the dropdown menu (useful for helper tags).
-* **Exclude Hanna tags:** Select specific tags to hide from the dropdown.
+*(If you use a custom JSON configuration, you must manually add the plugin path:)*
+```json
+{
+  "external_plugins": {
+    "HannaCodeDialogTiny": "/site/modules/HannaCodeDialogTiny/tinymce-plugin/HannaCodeDialogTiny.js"
+  }
+}
+```
 
 ## New Features Compared to Original HannaCodeDialog
 
