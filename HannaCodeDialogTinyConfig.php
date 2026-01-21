@@ -37,24 +37,14 @@ class HannaCodeDialogTinyConfig extends ModuleConfig
         $f->label = $this->_('Auto-manage Hanna Code Integration');
         $f->description
             = $this->_("When enabled, this module automatically manages the 'hannacode' toolbar button and plugin activation based on whether 'TextformatterHannaCode' is enabled for each TinyMCE field.");
-        $f->notes
-            = $this->_('When you add or remove the TextformatterHannaCode from a field, both the toolbar button and the external plugin will be automatically added or removed. This sync happens when saving a field or when saving this module configuration.');
+        $f->notes = $this->_('When you add or remove the TextformatterHannaCode from a field, both the toolbar button and the external plugin will be automatically added or removed. This sync happens when saving a field or when saving this module configuration.') . "\n\n" .
+            "**" . $this->_('Manual Setup (if disabled):') . "**\n" .
+            "1. " . $this->_('Go to Setup → Fields and edit your TinyMCE field') . "\n" .
+            "2. " . $this->_('In the Details tab, add TextformatterHannaCode to Text Formatters') . "\n" .
+            "3. " . $this->_('In the Input tab, scroll to Toolbar and add hannacode') . "\n" .
+            "4. " . $this->_('Scroll to External plugins to enable and check HannaCodeDialogTiny') . "\n" .
+            "5. " . $this->_('Save the field');
         $f->attr('checked', $this->auto_add_toolbar ? 'checked' : '');
-        $inputfields->add($f);
-
-        // Manual Setup Instructions
-        $f = $modules->InputfieldMarkup;
-        $f->label = $this->_('Manual Setup Instructions');
-        $f->value = '<p>' . $this->_('If you prefer to manage the integration manually for each field:') . '</p>' .
-            '<ol>' .
-            '<li>' . $this->_('Go to <strong>Setup → Fields</strong> and edit your TinyMCE field') . '</li>' .
-            '<li>' . $this->_('In the <strong>Details</strong> tab, add <code>TextformatterHannaCode</code> to <strong>Text Formatters</strong>') . '</li>' .
-            '<li>' . $this->_('In the <strong>Input</strong> tab, scroll to <strong>Toolbar</strong> and add <code>hannacode</code>') . '</li>' .
-            '<li>' . $this->_('Scroll to <strong>External plugins to enable</strong> and check <code>HannaCodeDialogTiny</code>') . '</li>' .
-            '<li>' . $this->_('Save the field') . '</li>' .
-            '</ol>';
-        $f->icon = 'info-circle';
-        $f->collapsed = Inputfield::collapsedYes;
         $inputfields->add($f);
 
         // Exclude prefix

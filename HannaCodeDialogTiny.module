@@ -205,7 +205,7 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
             'hanna_tags'     => $this->getDropdownTags($editedPage),
             'dropdown_title' => $this->_('Insert Hanna tag'),
             'dialog_title'   => $this->_('Hanna Code Dialog'),
-            'dropdown_icon'  => $this->moduleUrl . 'img/hannadropdown.svg',
+            'dropdown_icon'  => 'sun-o',
             'hover_title'    => $this->_('Doubleclick to edit'),
             'dialog_url'     => $dialogUrl,
             'page_id'        => $editedPage->id,

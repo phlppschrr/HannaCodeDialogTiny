@@ -102,11 +102,19 @@ tinymce.PluginManager.add('HannaCodeDialogTiny', function (editor, url) {
         }
     });
     // Register the Toolbar Button
-    editor.ui.registry.addIcon('hcdtdd', '<img style="width:24px; height: 24px;" src="' + hcdt_config.dropdown_icon + '" />');
+    // Support both FontAwesome icon names (e.g., 'sun-o') and SVG URLs
+    var iconName = 'hcdtdd';
+    if (hcdt_config.dropdown_icon.indexOf('/') === -1 && hcdt_config.dropdown_icon.indexOf('.') === -1) {
+        // It's a FontAwesome icon name, use it directly
+        iconName = hcdt_config.dropdown_icon;
+    } else {
+        // It's a URL, register as custom icon
+        editor.ui.registry.addIcon(iconName, '<img style="width:24px; height: 24px;" src="' + hcdt_config.dropdown_icon + '" />');
+    }
 
     editor.ui.registry.addMenuButton('hannacode', {
         text: hcdt_config.dropdown_title,
-        icon: 'hcdtdd',
+        icon: iconName,
         fetch: function (callback) {
             var items = [];
             var tags = hcdt_config.hanna_tags;
