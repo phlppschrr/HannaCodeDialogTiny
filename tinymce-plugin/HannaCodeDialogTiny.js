@@ -105,8 +105,8 @@ tinymce.PluginManager.add('HannaCodeDialogTiny', function (editor, url) {
     // Support both FontAwesome icon names (e.g., 'sun-o') and SVG URLs
     var iconName = 'hcdtdd';
     if (hcdt_config.dropdown_icon.indexOf('/') === -1 && hcdt_config.dropdown_icon.indexOf('.') === -1) {
-        // It's a FontAwesome icon name, use it directly
-        iconName = hcdt_config.dropdown_icon;
+        // It's a FontAwesome icon name, register as HTML
+        editor.ui.registry.addIcon(iconName, '<i class="fa fa-' + hcdt_config.dropdown_icon + '"></i>');
     } else {
         // It's a URL, register as custom icon
         editor.ui.registry.addIcon(iconName, '<img style="width:24px; height: 24px;" src="' + hcdt_config.dropdown_icon + '" />');
