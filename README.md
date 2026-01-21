@@ -67,7 +67,7 @@ my_select__type=select
 
 #### Options (for Selects, Radios, etc.)
 
-You can define options using a pipe `|` separator (or comma `,` for legacy support). 
+You can define options using a pipe `|` separator (or comma `,` for legacy support).
 
 **A) Simple List:**
 
@@ -159,11 +159,16 @@ $wire->addHookAfter('HannaCodeDialogTiny::getDropdownTags', function(HookEvent $
 
 ### 2. Manipulate Dialog Form (Add/Modify Fields)
 
-Hook `ProcessHannaCodeDialog::buildForm` to add custom fields that aren't defined in the Hanna Code attributes, or to modify existing ones.
+Hook `ProcessHannaCodeDialogTiny::buildForm` to add custom fields that aren't defined in the Hanna Code attributes, or to modify existing ones.
 
 ```php
 $wire->addHookAfter('ProcessHannaCodeDialogTiny::buildForm', function(HookEvent $event) {
-    $tagName = $event->arguments(0); // Name of the tag being edited
+    $tagName = $event->arguments(0);           // Name of the tag being edited
+    $editedPage = $event->arguments(1);        // The page being edited
+    $currentAttributes = $event->arguments(2); // Attributes already present
+    $defaultAttributes = $event->arguments(3); // Default attributes from Hanna Code
+    $inputfieldName = $event->arguments(4);    // Context inputfield name
+    
     $form = $event->return; // The InputfieldForm object
 
     if($tagName === 'my_special_tag') {
@@ -180,12 +185,15 @@ $wire->addHookAfter('ProcessHannaCodeDialogTiny::buildForm', function(HookEvent 
 ### 3. Manipulate Options
 
 Hook `ProcessHannaCodeDialogTiny::prepareOptions` to dynamically inject options into select fields via PHP.
+If you hook after `ProcessHannaCodeDialogTiny::prepareOptions` then your hook should set `$event->return` to an array of option values, or an associative array in the form of `$value => $label`.
+
 
 ```php
 $wire->addHookAfter('ProcessHannaCodeDialogTiny::prepareOptions', function(HookEvent $event) {
     $optionsString = $event->arguments(0);
     $attrName = $event->arguments(1);
     $tagName = $event->arguments(2);
+    $editedPage = $event->arguments(3); // The page context
 
     if($tagName === 'employee_list' && $attrName === 'employee') {
         // Generate options array dynamically
@@ -196,7 +204,6 @@ $wire->addHookAfter('ProcessHannaCodeDialogTiny::prepareOptions', function(HookE
         $event->return = $options;
     }
 });
-
 ```
 
 ## Migration from CKEditor (HannaCodeDialog)
@@ -206,7 +213,8 @@ This module is fully compatible with the original `HannaCodeDialog` for CKEditor
 However, if you have registered custom **Hooks** in your `ready.php`, you need to update the class names:
 
 *   `HannaCodeDialog::getDropdownTags` &rarr; `HannaCodeDialogTiny::getDropdownTags`
-*   `ProcessHannaCodeDialog::buildForm` &rarr; `ProcessHannaCodeDialogTiny::buildForm` (The process module has been renamed to avoid conflicts)
+*   `ProcessHannaCodeDialog::buildForm` &rarr; `ProcessHannaCodeDialogTiny::buildForm`
+*   `ProcessHannaCodeDialog::prepareOptions` &rarr; `ProcessHannaCodeDialogTiny::prepareOptions`
 
 ## Credits
 
