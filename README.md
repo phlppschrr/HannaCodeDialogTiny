@@ -58,7 +58,7 @@ my_select__type=select
 * `textarea` (*Note: Line breaks are removed upon saving, as Hanna Code attributes do not support multiline values*)
 * `integer` (HTML5 number input)
 * `checkbox` (Single toggle, 0/1)
-* `toggle` (InputfieldToggle, if installed)
+* `toggle` (InputfieldToggle, if installed, with fallback to checkbox)
 * `radios`, `select`, `selectmultiple`, `checkboxes`, `asmselect`
 * `pagelistselect`, `pagelistselectmultiple`
 * `date`, `datetime`
@@ -67,7 +67,7 @@ my_select__type=select
 
 #### Options (for Selects, Radios, etc.)
 
-You can define options using a pipe `|` separator. 
+You can define options using a pipe `|` separator (or comma `,` for legacy support). 
 
 **A) Simple List:**
 
@@ -110,6 +110,14 @@ start_date__format="d.m.Y H:i"
 
 ```
 
+For date fields (no time), use:
+
+```text
+birthday__type=date
+birthday__format="d.m.Y"
+
+```
+
 ### 3. Clone Existing Fields (Powerful!)
 
 Instead of configuring complex fields like `PageAutocomplete` manually, you can tell the dialog to simply "clone" the configuration of an existing ProcessWire field from your setup.
@@ -138,12 +146,12 @@ Hook `HannaCodeDialogTiny::getDropdownTags` to filter which tags are shown (e.g.
 ```php
 $wire->addHookAfter('HannaCodeDialogTiny::getDropdownTags', function(HookEvent $event) {
     $tags = $event->return;
-    
+
     // Example: Remove 'secret_tag' if user is not superuser
     if(!$this->user->isSuperuser()) {
         unset($tags['secret_tag']);
     }
-    
+
     $event->return = $tags;
 });
 
@@ -190,6 +198,15 @@ $wire->addHookAfter('ProcessHannaCodeDialog::prepareOptions', function(HookEvent
 });
 
 ```
+
+## Migration from CKEditor (HannaCodeDialog)
+
+This module is fully compatible with the original `HannaCodeDialog` for CKEditor. You can move your existing Hanna Code attributes to TinyMCE without changes.
+
+However, if you have registered custom **Hooks** in your `ready.php`, you need to update the class names:
+
+*   `HannaCodeDialog::getDropdownTags` &rarr; `HannaCodeDialogTiny::getDropdownTags`
+*   `ProcessHannaCodeDialog::buildForm` (Unchanged, shares the same process module)
 
 ## Credits
 

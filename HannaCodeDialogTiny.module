@@ -42,8 +42,8 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
 
         $script = "
         <script>
-            setTimeout(function() {
-                var fieldName = '".$inputfield->attr('name')."';
+            (function() {
+                var fieldName = '{$inputfield->attr('name')}';
                 if(typeof ProcessWire.config.InputfieldTinyMCE !== 'undefined' && typeof ProcessWire.config.InputfieldTinyMCE.settings !== 'undefined') {
                     var settings = ProcessWire.config.InputfieldTinyMCE.settings[fieldName];
                     if (settings) {
@@ -59,7 +59,7 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
                         settings.extended_valid_elements += ',span[class|contenteditable|data-hcd-code|title]';
                     }
                 }
-            }, 0);
+            })();
         </script>";
         $event->return = $script.$out;
     }
@@ -210,6 +210,7 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
     
     <p><strong>A) Simple List:</strong></p>
     <p class='mono mono-block'>vegetables__options=Spinach|Pumpkin|Celery</p>
+    <p>You can also use a comma <code>,</code> separator (legacy support).</p>
     
     <p><strong>B) Key/Value pairs:</strong><br>
     Use a colon <code>:</code> to separate saved value from displayed label.</p>
@@ -223,6 +224,13 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
     <p class='mono mono-block'>
         vegetables__description=Select ingredients for your soup.<br>
         vegetables__notes=Pumpkin tastes best in autumn.
+    </p>
+
+    <h3>5. Date/Time Inputs</h3>
+    <p>For <code>date</code> types, no time picker is shown.</p>
+    <p class='mono mono-block'>
+        birthday__type=date<br>
+        birthday__format="d.m.Y"
     </p>
 </div>
 EOT;
