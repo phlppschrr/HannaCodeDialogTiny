@@ -10,14 +10,30 @@ The main enhancement is that Hanna tags in a TinyMCE field are rendered as visua
 * **InputfieldTinyMCE** (Core)
 * **TextformatterHannaCode** module
 
-### 3. Configure TinyMCE
-To use the dialog, you need to enable the **HannaCodeDialogTiny** plugin in your TinyMCE field settings.
+## Configuration
 
-1.  Go to **Setup > Fields** and edit your TinyMCE field (e.g., `body`).
-2.  In the **Input** tab, scroll to **External plugins to enable**.
-3.  Check:
-    - `HannaCodeDialogTiny`
-4.  Add `hannacode` to your **Toolbar** settings to show the "Insert Hanna tag" dropdown button.
+### Option 1: Automatic Setup (Recommended)
+
+1.  Go to **Modules > HannaCodeDialogTiny** (Site > HannaCodeDialogTiny)
+2.  Enable the checkbox **"Auto-manage Hanna Code Integration"**
+3.  Save the module configuration
+
+This will automatically:
+- Add the `hannacode` toolbar button to any TinyMCE field that uses `TextformatterHannaCode`
+- Enable the `HannaCodeDialogTiny` plugin in "External plugins to enable"
+- Remove both when you remove the text formatter
+
+The sync happens automatically when you save a field or the module configuration.
+
+### Option 2: Manual Setup
+
+If you prefer manual control:
+
+1.  Go to **Setup > Fields** and edit your TinyMCE field (e.g., `body`)
+2.  In the **Details** tab, add `TextformatterHannaCode` to **Text Formatters**
+3.  In the **Input** tab, scroll to **Toolbar** and add `hannacode`
+4.  Scroll to **External plugins to enable** and check `HannaCodeDialogTiny`
+5.  Save the field
 
 *(If you use a custom JSON configuration, you must manually add the plugin path:)*
 ```json

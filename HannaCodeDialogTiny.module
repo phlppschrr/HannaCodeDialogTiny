@@ -267,6 +267,20 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
         $f->attr('checked', $this->auto_add_toolbar ? 'checked' : '');
         $inputfields->add($f);
 
+        $f = $modules->InputfieldMarkup;
+        $f->label = $this->_('Manual Setup Instructions');
+        $f->value = '<p>' . $this->_('If you prefer to manage the integration manually for each field:') . '</p>' .
+            '<ol>' .
+            '<li>' . $this->_('Go to <strong>Setup → Fields</strong> and edit your TinyMCE field') . '</li>' .
+            '<li>' . $this->_('In the <strong>Details</strong> tab, add <code>TextformatterHannaCode</code> to <strong>Text Formatters</strong>') . '</li>' .
+            '<li>' . $this->_('In the <strong>Input</strong> tab, scroll to <strong>Toolbar</strong> and add <code>hannacode</code>') . '</li>' .
+            '<li>' . $this->_('Scroll to <strong>External plugins to enable</strong> and check <code>HannaCodeDialogTiny</code>') . '</li>' .
+            '<li>' . $this->_('Save the field') . '</li>' .
+            '</ol>';
+        $f->icon = 'info-circle';
+        $f->collapsed = Inputfield::collapsedYes;
+        $inputfields->add($f);
+
         $f = $modules->InputfieldText;
         $f->name = 'exclude_prefix';
         $f->label = $this->_('Exclude prefix');
@@ -386,8 +400,8 @@ EOT;
         $mod = $this->modules->get('InputfieldTinyMCE');
         $url = $this->wire()->config->urls->{$this->className};
 
-        // Upgrade from 0.1.x versions to 0.2.0
-        if(version_compare($fromVersion, '0.2.0', '<')) {
+        // Upgrade from versions prior to 0.2.2
+        if(version_compare($fromVersion, '0.2.2', '<')) {
             // Remove old plugin registrations
             $mod->removePlugin($url.'plugins/hannadialog/hannadialog.js');
             $mod->removePlugin($url.'plugins/hannadropdown/hannadropdown.js');
@@ -396,28 +410,26 @@ EOT;
             // Add new plugin path
             $mod->addPlugin($url.'tinymce-plugin/HannaCodeDialogTiny.js');
 
-            $this->message("Upgraded HannaCodeDialogTiny to 0.2.0. Plugin paths updated.");
-        }
-
-        // Migrate toolbar settings: hannadropdown -> hannacode
-        if(version_compare($fromVersion, '0.2.1', '<')) {
+            // Migrate toolbar settings: hannadropdown -> hannacode
             $fields = $this->wire()->fields->find('type=FieldtypeTextarea');
             $count = 0;
             foreach($fields as $field) {
                 if($field->inputfieldClass != 'InputfieldTinyMCE') continue;
 
                 $toolbar = $field->toolbar;
-                // Simple search/replace might be dangerous if 'hannadropdown' is part of another word, but it's unlikely for a toolbar definition.
-                // Toolbar items are space-separated.
                 if(strpos($toolbar, 'hannadropdown') !== false) {
                     $toolbar = str_replace('hannadropdown', 'hannacode', $toolbar);
                     $field->set('toolbar', $toolbar);
                     $field->save();
                     $count++;
-                    $this->message("Migrated toolbar for field '{$field->name}': hannadropdown -> hannacode");
                 }
             }
-            if($count > 0) $this->message("Updated $count fields to use new 'hannacode' toolbar button.");
+            
+            if($count > 0) {
+                $this->message("Upgraded HannaCodeDialogTiny: Plugin paths updated and migrated $count field(s) from 'hannadropdown' to 'hannacode'.");
+            } else {
+                $this->message("Upgraded HannaCodeDialogTiny: Plugin paths updated.");
+            }
         }
     }
 
