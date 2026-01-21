@@ -55,10 +55,12 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
         if(empty($data['auto_add_toolbar'])) return;
 
         $fields = $this->wire()->fields->find('type=FieldtypeTextarea');
+        $pluginPath = $this->wire()->config->urls->{$this->className} . 'tinymce-plugin/HannaCodeDialogTiny.js';
+        
         foreach($fields as $field) {
-            if($this->syncToolbarWithHannaCode($field)) {
+            if($this->syncHannaCodeSettings($field, $pluginPath)) {
                 $field->save();
-                $this->message("Auto-updated toolbar for field: {$field->name}");
+                $this->message("Auto-updated toolbar and plugin for field: {$field->name}");
             }
         }
     }
@@ -66,31 +68,47 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
     public function hookSaveField(HookEvent $event) {
         if(!$this->auto_add_toolbar) return;
         $field = $event->arguments(0);
-        $this->syncToolbarWithHannaCode($field);
+        $pluginPath = $this->wire()->config->urls->{$this->className} . 'tinymce-plugin/HannaCodeDialogTiny.js';
+        $this->syncHannaCodeSettings($field, $pluginPath);
     }
 
-    protected function syncToolbarWithHannaCode($field) {
+    protected function syncHannaCodeSettings($field, $pluginPath) {
         if($field->inputfieldClass != 'InputfieldTinyMCE') return false;
 
         $formatters = $field->textformatters;
         if(!is_array($formatters)) $formatters = [];
         $hasHanna = in_array('TextformatterHannaCode', $formatters);
 
+        // Sync toolbar
         $toolbar = (string)$field->toolbar;
         $hasButton = strpos($toolbar, 'hannacode') !== false;
         $changed = false;
 
         if($hasHanna && !$hasButton) {
-            // Append hannacode
             $field->toolbar = trim($toolbar . " hannacode");
             $changed = true;
         } elseif(!$hasHanna && $hasButton) {
-            // Remove hannacode and cleanup
             $toolbar = str_replace('hannacode', '', $toolbar);
             $toolbar = preg_replace('/\s+/', ' ', $toolbar);
             $field->toolbar = trim($toolbar);
             $changed = true;
         }
+
+        // Sync external plugin
+        $extPlugins = $field->extPlugins;
+        if(!is_array($extPlugins)) $extPlugins = [];
+        $hasPlugin = in_array($pluginPath, $extPlugins);
+
+        if($hasHanna && !$hasPlugin) {
+            $extPlugins[] = $pluginPath;
+            $field->extPlugins = $extPlugins;
+            $changed = true;
+        } elseif(!$hasHanna && $hasPlugin) {
+            $extPlugins = array_diff($extPlugins, [$pluginPath]);
+            $field->extPlugins = array_values($extPlugins);
+            $changed = true;
+        }
+
         return $changed;
     }
 
@@ -243,10 +261,10 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
 
         $f = $modules->InputfieldCheckbox;
         $f->name = 'auto_add_toolbar';
-        $f->label = $this->_('Auto-add ' . '\'hannacode\'' . ' Toolbar Button');
-        $f->description = $this->_("If enabled, the 'hannacode' button is automatically added to the TinyMCE toolbar when 'TextformatterHannaCode' is enabled for the field.");
-        $f->notes = $this->_("If you remove the textformatter, the button will be removed as well. This check runs when saving a Field or this Module configuration.");
-        $f->value = $this->auto_add_toolbar;
+        $f->label = $this->_('Auto-manage Hanna Code Integration');
+        $f->description = $this->_("When enabled, this module automatically manages the 'hannacode' toolbar button and plugin activation based on whether 'TextformatterHannaCode' is enabled for each TinyMCE field.");
+        $f->notes = $this->_("When you add or remove the TextformatterHannaCode from a field, both the toolbar button and the external plugin will be automatically added or removed. This sync happens when saving a field or when saving this module configuration.");
+        $f->attr('checked', $this->auto_add_toolbar ? 'checked' : '');
         $inputfields->add($f);
 
         $f = $modules->InputfieldText;
