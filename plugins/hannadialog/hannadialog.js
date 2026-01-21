@@ -1,129 +1,236 @@
 /**
  * hannadialog plugin for TinyMCE
- *
- * @param editor
- *
+ * - Converts Hanna Codes to Widgets
+ * - Handles Drag & Drop
+ * - Opens Iframe Dialog
  */
-function hdDialog(editor, node, hanna) {
-	var $ = jQuery;
+tinymce.PluginManager.add('hannadialog', function (editor, url) {
 
-	var inputs = [];
-	var initial = {};
-	for(const [key, value] of Object.entries(hanna.attrs)) {
-		inputs.push({
-			type:		'input',
-			name:		key,
-			label:		key.charAt(0).toUpperCase() + key.slice(1)
-		});
-		initial[key] = value;
-	}
+    var openTag = hcdt_config.open_tag;
+    var closeTag = hcdt_config.close_tag;
+    var tagNames = Object.keys(hcdt_config.hanna_tags);
 
-	editor.windowManager.open({
-	  title: hcdt_config.dropdown_title, // The dialog's title - displayed in the dialog header
-	  body: {
-	    type: 'panel', // The root body type - a Panel or TabPanel
-	    items: inputs
-	  },
-	  initialData: initial,
-	  buttons: [ // A list of footer buttons
-	    {
-	      type: 'submit',
-	      name: 'submitButton',
-	      text: 'OK'
-	    }, {
-	    	type: 'cancel',
-	    	text: 'Cancel',
-	    	name: 'closeButton'
-	    }
-	  ],
-	  onSubmit: (api) => {
-	  	const data = api.getData();
-	  	var str = hcdt_config.open_tag + hanna.tag;
-	  	for(const k of Object.keys(hanna.attrs)) {
-	  		str += " " + k + '="' + data[k] + '"';
-	  	}
-	  	str += hcdt_config.close_tag;
-	  	node.innerHTML = str;
-	  	api.close();
-	  }
-	});	
-	
-	// To be continued...
-}
+    /**
+     * Parse Hanna Code string into components
+     * @param {string} str - The Hanna Code string
+     * @param {string} openTag - Opening tag delimiter
+     * @param {string} closeTag - Closing tag delimiter
+     * @return {object} Parsed components: tag, attrs, fullCode
+     */
+    var parseHannaCode = function (str, openTag, closeTag) {
+        var clean = str;
+        if (clean.startsWith(openTag)) clean = clean.substring(openTag.length);
+        if (clean.endsWith(closeTag)) clean = clean.substring(0, clean.length - closeTag.length);
+        clean = clean.trim();
+
+        var match = /^([a-z0-9_-]+)([\s\S]*)$/i.exec(clean);
+        if (!match) return {};
+
+        return {
+            tag: match[1],
+            attrs: match[2].trim(),
+            fullCode: openTag + clean + closeTag
+        };
+    };
+
+    /**
+     * Escape special regex characters
+     * @param {string} str - String to escape
+     * @return {string} Escaped string
+     */
+    var escapeRegex = function (str) {
+        return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    };
 
 
-const escapeReChars = (str) => {
-	return str.replace(/([[\]*+{}])/g, '\\$1');
-};
 
-const parseHannaCode = (str, openTag, closeTag) => {
-	str = str.substring(openTag.length);
-	str = str.substring(0, str.length - closeTag.length);
-	str = str.trim();
-	var m1 = /^([a-z0-9_-]+)(.*)$/i.exec(str);
-	var hannaName = m1[1];
-	var rest = m1[2].trim();
-	var attrs = {}, matches;
-	if(rest) {
-		var ptn = /([a-z0-9_-]+)\s*=\s*(['"])(.*?)\2/gi;
-		matches = Array.from(rest.matchAll(ptn), m => {return [m[1], m[3]];});
-	}
-	for(const [attrN, attrV] of matches) {
-		attrs[attrN] = attrV;
-	}
-	return {
-		tag:	hannaName,
-		attrs:	attrs
-	};
-}
+    // Load CSS explicitly when editor initializes
+    editor.on('init', function () {
+        if (hcdt_config.css_url) {
+            editor.dom.loadCSS(hcdt_config.css_url);
+        }
+    });
 
-tinymce.PluginManager.add('hannadialog', (editor, url) => {
-	
-	var $ = jQuery;
-	const openTag = hcdt_config.open_tag;
-	const tagNames = Object.keys(hcdt_config.hanna_tags);
-	const closeTag = hcdt_config.close_tag;
-	
-	editor.on("dblclick", (e) => {
-		var node = e.originalTarget;
-		if(typeof node === 'undefined')
-			return;
-		if(node.nodeName === 'SPAN' && $(node).hasClass('hannadialog')) {
-			var hannaData = parseHannaCode(node.innerHTML, openTag, closeTag);
-			if(Object.keys(hannaData).length > 0) {
-				hdDialog(editor, node, hannaData);
-			}
-		}
-	});
-	
-	editor.on("BeforeSetContent", (e) => {
-		// Fired before the content is parsed and rendered in the editor.
-		// We make our Hanna Codes noneditable and highlight them.
-		var content = "" + e.content;
-		for(const tagName of tagNames) {
-			const rePattern = "(" + escapeReChars(openTag) + tagName + ".*?" + escapeReChars(closeTag) + ")";
-			const re = new RegExp(rePattern, "smg");
-			content = content.replace(re, '<span class="noneditable hannadialog" title="' + hcdt_config.hover_title + '">$1</span>');
-		}
-		e.content = content;
-		return e;
-	});
-	
-	editor.on("GetContent", (e) => {
-		// Fired before the content is serialized from the editor, e.g. when saving or opening
-		// the source editor. We remove any noneditable wrappers around our Hanna Codes.
-		var content = "" + e.content;
-		for(const tagName of tagNames) {
-			const re = new RegExp('<span class="noneditable hannadialog" title="[^"]*">(.*?)</span>', "smg");
-			content = content.replace(re, '$1');
-		}
-		e.content = content;
-		return e;
-	});
+    // FIX FOR UNDO/REDO: Store raw Hanna Code in undo snapshots instead of widget HTML
+    // This prevents the data-hcd-code attribute from getting corrupted during undo
+    editor.on('BeforeAddUndo', function (e) {
+        if (!e.level || !e.level.content) return;
 
-	// Return metadata for the plugin 
-	return {
-		getMetadata: () => ({ name: 'HannaDialog' })
-	};
+        // Convert widget HTML back to raw Hanna Code before storing in undo manager
+        // This uses the same regex as GetContent
+        var re = /<span[^>]*data-hcd-code=(["'])(.*?)\1[^>]*>[\s\S]*?<\/span>/gi;
 
+        e.level.content = e.level.content.replace(re, function (match, quote, captured) {
+            // Restore encoded quotes
+            return captured.replace(/&quot;/g, '"');
+        });
+    });
+
+
+    /**
+     * Open the Hanna Code dialog
+     * @param {string} tagName - Name of the Hanna tag
+     * @param {string} existingCode - Existing code for editing (optional)
+     */
+    var openDialog = function (tagName, existingCode) {
+        try {
+            var dialogUrl = new URL(hcdt_config.dialog_url, window.location.origin);
+            dialogUrl.searchParams.set('tag', tagName);
+            dialogUrl.searchParams.set('pid', hcdt_config.page_id);
+            dialogUrl.searchParams.set('inputfield', editor.id);
+
+            if (existingCode) {
+                // Simple encoding for URL transport
+                dialogUrl.searchParams.set('code', existingCode);
+            }
+
+            editor.windowManager.openUrl({
+                title: hcdt_config.dialog_title + ': ' + tagName,
+                url: dialogUrl.toString(),
+                width: 600,
+                height: 500
+            });
+        } catch (e) {
+            console.error('HannaDialog URL Error:', e);
+        }
+    };
+
+    // Register command for other plugins (e.g., dropdown) to use
+    editor.addCommand('mceHannaDialog', function (ui, value) {
+        if (value && value.tag) {
+            openDialog(value.tag, value.code);
+        }
+    });
+
+    /**
+     * Message handler for dialog communication
+     * Listens for postMessage from the iframe dialog
+     */
+    var messageHandler = function (event) {
+        var data = event.data;
+        if (data && data.mceAction === 'insertHanna') {
+            // Verify content target matches this editor exactly
+            if (!data.inputfield || data.inputfield !== editor.id) {
+                return;
+            }
+            editor.insertContent(data.text);
+            editor.windowManager.close();
+        }
+    };
+
+    window.addEventListener('message', messageHandler);
+
+    // Cleanup listener when editor is removed to prevent memory leaks
+    editor.on('remove', function () {
+        window.removeEventListener('message', messageHandler);
+    });
+
+    // Double-click to edit Hanna Code widget
+    editor.on("dblclick", function (e) {
+        var node = e.target.closest('.hannadialog');
+        if (node) {
+            // Read raw code from attribute
+            var content = node.getAttribute('data-hcd-code');
+
+            // Fallback to text content
+            if (!content) content = node.innerText || node.textContent;
+
+            // Validate that we have content
+            if (!content) {
+                console.warn('HannaDialog: No code found in widget');
+                return;
+            }
+
+            var hannaData = parseHannaCode(content, openTag, closeTag);
+            if (hannaData.tag) {
+                openDialog(hannaData.tag, content);
+            }
+        }
+    });
+
+    // Drag start: Store dragged node and set drag data
+    var draggedNode = null;
+    editor.on('dragstart', function (e) {
+        var node = e.target.closest('.hannadialog');
+        if (node) {
+            draggedNode = node;
+            var code = node.getAttribute('data-hcd-code') || node.innerText;
+
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', code);
+            e.dataTransfer.setData('text/html', code);
+
+            node.style.opacity = 0.4;
+        }
+    });
+
+    // Drag end: Refresh content if widget was successfully moved
+    editor.on('dragend', function (e) {
+        if (draggedNode) {
+            // Check if TinyMCE already moved the widget
+            // If the widget is no longer in the DOM, TinyMCE handled the move successfully
+            // If it's still there, the drop failed (e.g., onto a contenteditable=false widget)
+            var stillInDom = draggedNode.parentNode !== null;
+            var wasSuccessfulMove = e.dataTransfer.dropEffect !== 'none' && !stillInDom;
+
+            if (!wasSuccessfulMove) {
+                // Drop was cancelled OR drop failed (widget still in original position)
+                // Restore opacity
+                draggedNode.style.opacity = '';
+            }
+
+            draggedNode = null;
+
+            // Only refresh if widget was actually moved
+            if (wasSuccessfulMove) {
+                setTimeout(function () {
+                    var bm = editor.selection.getBookmark(2, true);
+                    editor.setContent(editor.getContent());
+                    editor.selection.moveToBookmark(bm);
+                }, 50);
+            }
+        }
+    });
+
+    // Render widgets: Convert raw Hanna Code to widget HTML
+    editor.on("BeforeSetContent", function (e) {
+        if (!e.content) return;
+        var content = "" + e.content;
+
+        if (tagNames.length > 0) {
+            var tagsPattern = tagNames.map(escapeRegex).join('|');
+            // Build regex to find Hanna Code tags
+            var pattern = "(" + escapeRegex(openTag) + "(?:" + tagsPattern + ")\\b[\\s\\S]*?\\/?" + escapeRegex(closeTag) + ")";
+            var regex = new RegExp(pattern, "gi");
+
+            content = content.replace(regex, function (match) {
+                var data = parseHannaCode(match, openTag, closeTag);
+
+                // Escape quotes for HTML attribute
+                var safeCode = match.replace(/"/g, '&quot;');
+
+                return '<span class="noneditable hannadialog" contenteditable="false" data-hcd-code="' + safeCode +
+                    '" title="' + hcdt_config.hover_title +
+                    '"><strong class="h-name">' + data.tag +
+                    '</strong><em class="h-attrs">' + data.attrs + '</em></span>';
+            });
+        }
+        e.content = content;
+    });
+
+    // Save: Convert widget HTML back to raw Hanna Code
+    editor.on("GetContent", function (e) {
+        if (!e.content) return;
+
+        // Robust regex to capture the code from the data attribute (single or double quotes)
+        // Uses backreference \1 to match the same quote type
+        var re = /<span[^>]*data-hcd-code=(["'])(.*?)\1[^>]*>[\s\S]*?<\/span>/gi;
+
+        e.content = e.content.replace(re, function (match, quote, captured) {
+            // Restore encoded quotes
+            return captured.replace(/&quot;/g, '"');
+        });
+    });
+
+    return { getMetadata: function () { return { name: 'HannaDialog' }; } };
 });
