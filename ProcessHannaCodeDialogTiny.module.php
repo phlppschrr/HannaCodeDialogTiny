@@ -147,6 +147,7 @@ class ProcessHannaCodeDialogTiny extends Process
             'notes' => [],
             'format' => [],
             'field' => [],
+            'labels' => [],
         ];
         $cleanAttributes = [];
 
@@ -158,6 +159,7 @@ class ProcessHannaCodeDialogTiny extends Process
             '__notes' => 'notes',
             '__format' => 'format',
             '__field' => 'field',
+            '__label' => 'labels',
         ];
 
         foreach ($defaultAttributes as $key => $value) {
@@ -332,7 +334,11 @@ class ProcessHannaCodeDialogTiny extends Process
         }
 
         // Set label, description, notes
-        $inputfield->label = ucfirst(str_replace('_', ' ', $key));
+        if (isset($meta['labels'][$key])) {
+            $inputfield->label = $meta['labels'][$key];
+        } else {
+            $inputfield->label = ucfirst(str_replace('_', ' ', $key));
+        }
 
         if (isset($meta['desc'][$key])) {
             $inputfield->description = $meta['desc'][$key];

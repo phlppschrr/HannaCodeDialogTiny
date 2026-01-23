@@ -113,6 +113,7 @@ products__options=[[_get_products]]
 #### Field Description & Notes
 
 ```text
+my_attr__label=Your Custom Label
 my_attr__description=Select the background color.
 my_attr__notes=This will affect the whole section.
 
