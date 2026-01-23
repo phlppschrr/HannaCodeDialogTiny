@@ -46,7 +46,6 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
         $this->moduleVersion = $this->getModuleInfo()['version'];
         $this->moduleUrl = $this->wire()->config->urls->{$this};
         $this->addHookAfter('ProcessPageEdit::execute', $this, 'addPlugins');
-        $this->addHookAfter('InputfieldTinyMCE::render', $this, 'configureTinyMCE');
         $this->addHookBefore('InputfieldForm::render', $this, 'addCheatSheet');
         $this->addHookAfter('InputfieldTinyMCE::getConfigInputfields', $this, 'addToolbarOption');
 
@@ -102,26 +101,25 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
         $f = $inputfields->get('toolbar');
         if($f && $f instanceof InputfieldTextTags) {
             $f->addTag('hannacode');
-            $label = $this->_('Insert Hanna Code') . " (" . $this->_('requires “HannaCodeDialogTiny” plugin') . ")";
+            $label = $this->_('Insert Hanna Code') . " (" . $this->_('requires "HannaCodeDialogTiny" plugin') . ")";
             $name = 'hannacode';
 
             // Link to the module configuration page
             $url = $this->wire()->config->urls->admin . "module/edit?name=" . $this->className;
             $note = "<a class='pw-tooltip' href='$url' target='_blank' rel='nofollow noopener' title='$label'>$name</a>";
 
-            // Insert sorted into the existing list
+            // Insert sorted into the existing 'Toolbar details:' list
             $prefix = '<span class="detail">' . $this->_('Toolbar details:') . '</span><br />';
-            $search = $prefix;
+            $prefixPos = strpos($f->notes, $prefix);
 
-            if(strpos($f->notes, $search) !== false) {
+            if($prefixPos !== false) {
                 // We assume the list ends with <br /><br /> based on InputfieldTinyMCEConfigs.php source
-                $endPos = strpos($f->notes, '<br /><br />', strpos($f->notes, $search));
+                $endPos = strpos($f->notes, '<br /><br />', $prefixPos);
                 if($endPos !== false) {
-                    $startPos = strpos($f->notes, $search) + strlen($search);
+                    $startPos = $prefixPos + strlen($prefix);
                     $existingList = substr($f->notes, $startPos, $endPos - $startPos);
 
                     // Use regex to split safely, avoiding commas inside attributes
-                    // Split by ", " only if followed by "<a"
                     $items = preg_split('/, (?=<a)/', $existingList);
                     if($items === false) $items = array($existingList); // Fallback
 
@@ -144,40 +142,7 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
         }
     }
 
-    /**
-     * Hook: Configure TinyMCE settings for Hanna Code support
-     *
-     * @param HookEvent $event
-     * @return void
-     */
-    public function configureTinyMCE(HookEvent $event) {
-        $inputfield = $event->object;
-        $out = $event->return;
-        $cssUrl = $this->moduleUrl . 'HannaCodeDialogTiny.css?v=' . $this->moduleVersion;
 
-        $script = "
-        <script>
-            (function() {
-                var fieldName = '{$inputfield->attr('name')}';
-                if(typeof ProcessWire.config.InputfieldTinyMCE !== 'undefined' && typeof ProcessWire.config.InputfieldTinyMCE.settings !== 'undefined') {
-                    var settings = ProcessWire.config.InputfieldTinyMCE.settings[fieldName];
-                    if (settings) {
-                        settings.noneditable_class = 'noneditable';
-
-                        if(settings.content_css) {
-                            settings.content_css = settings.content_css + ',' + '$cssUrl';
-                        } else {
-                            settings.content_css = '$cssUrl';
-                        }
-
-                        if(!settings.extended_valid_elements) settings.extended_valid_elements = '';
-                        settings.extended_valid_elements += ',span[class|contenteditable|data-hcd-code|title]';
-                    }
-                }
-            })();
-        </script>";
-        $event->return = $script.$out;
-    }
 
     /**
      * Hook: Add plugin configuration to page edit
@@ -214,7 +179,6 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
         ];
 
         $config->js($this->className, $settings);
-        $config->styles->add($this->moduleUrl . "{$this}.css?v=" . $this->moduleVersion);
 
         $event->return = '<script>var hcdt_config = config.HannaCodeDialogTiny;</script>' . $event->return;
     }
@@ -235,8 +199,7 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
 
         foreach ($hanna->hannaCodes()->getAll() as $hc) {
             $name = $hc->name;
-            $excludePrefix = $this->exclude_prefix ?: '_';
-            if (strpos($name, $excludePrefix) === 0) {
+            if (strpos($name, $this->exclude_prefix) === 0) {
                 continue;
             }
             if (is_array($this->exclude_selection) && in_array($name, $this->exclude_selection)) {
@@ -295,9 +258,7 @@ class HannaCodeDialogTiny extends WireData implements Module, ConfigurableModule
         }
 
         $formatters = $field->textformatters;
-        if ( ! is_array($formatters)) {
-            $formatters = [];
-        }
+        if ( ! is_array($formatters)) return false;
         $hasHanna = in_array('TextformatterHannaCode', $formatters);
 
         // Sync toolbar
